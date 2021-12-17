@@ -7,7 +7,11 @@
 
 /* font param */
 #define FONT_DIR        "../../fonts/monaco.ttf"
-#define FONT_SIZE       24
+#define FONT_SIZE       10
 
+/* Circle param */
+#define CIRCLE_SIZE     50
+#define CIRCLE_POS      (float)100
+#define CIRCLE_SPEED    (float)0.1
 
 #endif
