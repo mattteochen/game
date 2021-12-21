@@ -1,4 +1,5 @@
 #include "../common/create_figure.h"
+#include "SFML/Graphics/Color.hpp"
 #include "SFML/System/Vector2.hpp"
 
 int main(int args, char *argv[])
@@ -17,9 +18,8 @@ int main(int args, char *argv[])
     sf::RenderWindow window(sf::VideoMode(WINDOW_LENGTH, WINDOW_HEIGH), "My Window");
     
     /* create a figure -------------------------------------------------------------------------- */
-    std::vector<uint8_t> testRGB{100, 0, 255};
-    sf::Vector2f testPos(CIRCLE_POS, CIRCLE_POS);
-    create_figure::circleSfmlObject circle(CIRCLE_SIZE, testPos, CIRCLE_SPEED, testRGB);  
+    create_figure::circleSfmlObject circle(CIRCLE_SIZE, sf::Vector2f(0.0f, 0.0f), CIRCLE_SPEED, std::vector<uint8_t> {255,0,255});  
+    circle.circleFigure.setFillColor(sf::Color(100,100,100));
     /* FIXME: rgb setting in constructor do not work */
 
     /* let's draw some fonts -------------------------------------------------------------------- */

@@ -13,14 +13,14 @@ namespace create_figure
         std::vector<uint8_t> colour;
 
     public:
-        sfmlObjectCommon(float &speed, sf::Vector2f &pos, std::vector<uint8_t> &colour);
+        sfmlObjectCommon(const float speed, const sf::Vector2f pos, const std::vector<uint8_t> colour);
         /* TODO, add references return type */
         const float                 getMoveSpeed();
         const sf::Vector2f          getPosition();
         const std::vector<uint8_t>  getRGB();
-        void                        setMoveSpeed(const float &speed);
-        void                        setRGBInternal(std::vector<uint8_t> &colour);
-        void                        setPositionInternal(const sf::Vector2f &pos);
+        void                        setMoveSpeed(const float speed);
+        void                        setRGBInternal(const std::vector<uint8_t> colour);
+        void                        setPositionInternal(const sf::Vector2f pos);
     };
 
     class circleSfmlObject: public sfmlObjectCommon
@@ -28,10 +28,10 @@ namespace create_figure
     private:
     public:
         sf::CircleShape             circleFigure;
-        circleSfmlObject(float size, float num_sides, sf::Vector2f &pos, float speed, std::vector<uint8_t> &colour);
-        circleSfmlObject(float size,  sf::Vector2f &pos, float speed, std::vector<uint8_t> &colour);
-        void                        setPosition(const sf::Vector2f &pos);
-        void                        setRGB(std::vector<uint8_t> &colour);
+        circleSfmlObject(const float size, const float num_sides, const sf::Vector2f pos, const float speed, const std::vector<uint8_t> colour);
+        circleSfmlObject(const float size,  const sf::Vector2f pos, const float speed, const std::vector<uint8_t> colour);
+        void                        setPosition(const sf::Vector2f pos);
+        void                        setRGB(const std::vector<uint8_t> colour);
     };
 
 }
