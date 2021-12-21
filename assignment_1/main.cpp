@@ -1,39 +1,26 @@
-#include <cstdlib>
-#include <iostream>
-#include "../SFML-2.5.1-macos-clang/include/SFML/Graphics.hpp"
-#include "../common/config.h"
-#include "SFML/Graphics/CircleShape.hpp"
-#include "SFML/Graphics/Font.hpp"
-#include "SFML/Window/Event.hpp"
-#include "SFML/Window/Keyboard.hpp"
+#include "../common/create_figure.h"
+#include "SFML/System/Vector2.hpp"
 
 int main(int args, char *argv[])
 {
     /* calculate the font pos bases on the object pos */
-    auto calculate_centered_font = [&](std::pair<float,float> &object_pos, std::pair<float,float> &font_pos, float object_size, float font_size)
+    auto calculate_centered_font = [&](const sf::Vector2f &object_pos, sf::Vector2f &font_pos, const float object_size, const float font_size)
     {
         float diff = abs(object_size - font_size); /* do not div 2 for circles */
 
-        font_pos.second = object_pos.second + diff;
+        font_pos.x = object_pos.y + diff;
         /* TODO, x position */
-        font_pos.first = object_pos.first;
+        font_pos.x = object_pos.y;
     };
 
     /* create the window ------------------------------------------------------------------------ */
     sf::RenderWindow window(sf::VideoMode(WINDOW_LENGTH, WINDOW_HEIGH), "My Window");
     
     /* create a figure -------------------------------------------------------------------------- */
-    std::pair<float,float> circlePosition({CIRCLE_POS, CIRCLE_POS});
-    sf::CircleShape circle(CIRCLE_SIZE);
-    circle.setFillColor(sf::Color(255,0,255));
-    circle.setPosition(circlePosition.first, circlePosition.second);
-    float circleMoveSpeed = CIRCLE_SPEED;
-    
-    /* regular polygon are shaped by CircleShape -> just specify the num of sides */
-    //sf::CircleShape triangle(200, 3); 
-    //triangle.setFillColor(sf::Color(51,255,51));
-    //triangle.setPosition(300.0f, 300.0f);
-    //float triangleMoveSpeed = 0.01f;
+    std::vector<uint8_t> testRGB{100, 0, 255};
+    sf::Vector2f testPos(CIRCLE_POS, CIRCLE_POS);
+    create_figure::circleSfmlObject circle(CIRCLE_SIZE, testPos, CIRCLE_SPEED, testRGB);  
+    /* FIXME: rgb setting in constructor do not work */
 
     /* let's draw some fonts -------------------------------------------------------------------- */
     sf::Font myFont;
@@ -45,11 +32,11 @@ int main(int args, char *argv[])
     }
     /* set up the font that we wanna display */
     sf::Text testText("Hello World!", myFont, FONT_SIZE);
-    std::pair<float,float> testTextPosition;
-    calculate_centered_font(circlePosition, testTextPosition, CIRCLE_SIZE, FONT_SIZE);
-    testText.setPosition(testTextPosition.first, testTextPosition.second);
+    sf::Vector2f testTextPosition;
+    calculate_centered_font(circle.getPosition(), testTextPosition, circle.circleFigure.getRadius(), FONT_SIZE);
+    testText.setPosition(testTextPosition.x, testTextPosition.y);
     float testTextMoveSpeed = CIRCLE_SPEED;
-
+    
     /* Driver loop ------------------------------------------------------------------------------ */
     while(window.isOpen())
     {
@@ -66,7 +53,7 @@ int main(int args, char *argv[])
                 if (event.key.code == sf::Keyboard::X) 
                 {
                     /* reverse the animation */
-                    circleMoveSpeed *= -1.0f;
+                    circle.setMoveSpeed(circle.getMoveSpeed() * -1.0f);
                     testTextMoveSpeed *= -1.0f;
                 }
                 //if (event.key.code == sf::Keyboard::Y) 
@@ -78,11 +65,11 @@ int main(int args, char *argv[])
         }
 
         /* basic animation */
-        circle.setPosition(circle.getPosition() + sf::Vector2f(circleMoveSpeed, circleMoveSpeed));
+        circle.setPosition(circle.circleFigure.getPosition() + sf::Vector2f(circle.getMoveSpeed(), circle.getMoveSpeed()));
         testText.setPosition(testText.getPosition() + sf::Vector2f(testTextMoveSpeed, testTextMoveSpeed));
         
         window.clear();
-        window.draw(circle);
+        window.draw(circle.circleFigure);
         //window.draw(triangle);
         window.draw(testText);
         window.display();
