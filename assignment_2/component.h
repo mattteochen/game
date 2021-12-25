@@ -11,8 +11,9 @@ namespace component
     public:
         sf::Vector2f    m_pos;
         sf::Vector2f    m_vel;
+        float           m_angle = 0;
         CTransform() {}
-        CTransform(const sf::Vector2f pos, const sf::Vector2f vel);
+        CTransform(const sf::Vector2f pos, const sf::Vector2f vel, const float angle);
     };
 
     class CShape
@@ -39,6 +40,7 @@ namespace component
 
     class CLifespan
     {
+    public:
         int remaining   = 0;
         int total       = 0;
         CLifespan(const int remaining, const int total);
@@ -46,11 +48,12 @@ namespace component
 
     class CInput
     {
+    public:
         bool up     = false;
         bool left   = false;
         bool right  = false;
         bool down   = false;
         bool shoot  = false;
-        CCInput() {}
+        CInput() {}
     };
 }

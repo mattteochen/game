@@ -16,7 +16,7 @@ component::CShape::CShape(const float size, const int sides, const std::vector<u
     m_shape.setOrigin(size,size);
 }
 
-component::CTransform::CTransform(const sf::Vector2f pos, const sf::Vector2f vel) : m_pos(pos), m_vel(vel) {}
+component::CTransform::CTransform(const sf::Vector2f pos, const sf::Vector2f vel, const float angle) : m_pos(pos), m_vel(vel), m_angle(angle) {}
 
 component::CCollision::CCollision(float rad) : radius(rad) {}
 

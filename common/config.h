@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <fstream>
 #include <algorithm>
 #include <utility>
 #include <map>
