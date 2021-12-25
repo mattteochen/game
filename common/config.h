@@ -9,6 +9,8 @@
 #include <map>
 #include <queue>
 #include <iostream>
+#include <time.h>
+#include <math.h>
 #include "../SFML-2.5.1-macos-clang/include/SFML/Graphics.hpp"
 #include "SFML/Graphics/CircleShape.hpp"
 #include "SFML/Graphics/Font.hpp"
