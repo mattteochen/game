@@ -11,6 +11,12 @@ populate_iniput(const std::string config, game::Game *game)
     std::ifstream file_in(config);
     std::string s;
     int num = 0;
+    
+    if (file_in.fail())
+    {
+        std::cerr << "config file error\n";
+        exit(EXIT_FAILURE);
+    }
 
     file_in >> s;
     if (s == "Window")
@@ -37,9 +43,10 @@ populate_iniput(const std::string config, game::Game *game)
         file_in >> text_size;
         game->m_text.setCharacterSize(text_size);
 
-        std::vector<uint8_t> color;
+        std::vector<int> color(3,0);
         file_in >> color[0] >> color[1] >> color[2];
-        game->m_text.setFillColor(sf::Color(color[0],color[1],color[2]));
+        std::cout << color[0] << " " << color[1] << " " << color[2] << "\n";
+        game->m_text.setFillColor(sf::Color((uint8_t)color[0],(uint8_t)color[1],(uint8_t)color[2]));
     }
     else
     {
@@ -51,11 +58,11 @@ populate_iniput(const std::string config, game::Game *game)
     file_in >> s;
     if (s == "Player")
     {
-        file_in >> game->m_player_config.SR >> game->m_player_config.CR >> game->m_player_config.S >>game->m_player_config.FR >> game->m_player_config.FG >> game->m_player_config.FB >> game->m_player_config.OR >> game->m_player_config.OG >> game->m_player_config.OB >> game->m_player_config.OT >> game->m_player_config.V;
+        file_in >> game->m_player_config.SR >> game->m_player_config.CR >> game->m_player_config.S >> game->m_player_config.FR >> game->m_player_config.FG >> game->m_player_config.FB >> game->m_player_config.OR >> game->m_player_config.OG >> game->m_player_config.OB >> game->m_player_config.OT >> game->m_player_config.V;
     }
     else
     {
-        std::cerr << "file error\n";
+        std::cerr << "file error player " << s << "\n";
         exit(EXIT_FAILURE);
     }   
         
@@ -66,7 +73,7 @@ populate_iniput(const std::string config, game::Game *game)
     }
     else
     {
-        std::cerr << "file error\n";
+        std::cerr << "file error enemy " << s << "\n";
         exit(EXIT_FAILURE);
     }   
     
@@ -77,7 +84,7 @@ populate_iniput(const std::string config, game::Game *game)
     }
     else
     {
-        std::cerr << "file error\n";
+        std::cerr << "file error bullet\n";
         exit(EXIT_FAILURE);
     }   
 }
@@ -92,9 +99,9 @@ game::Game::init(const std::string config)
 {
     /* for random num */
     std::srand(time(NULL));
-
+    
     populate_iniput(config, this);
-
+    
     /* create the game window */
     m_window.create(sf::VideoMode(m_window_config.width,m_window_config.height), "Game!");
     m_window.setFramerateLimit(m_window_config.frame_rate);
@@ -115,7 +122,7 @@ game::Game::spawnPlayer()
     /* transform -> position and velocity */
     new_e->p_CTransform = std::make_shared<component::CTransform>(sf::Vector2f(200.0,200.0), sf::Vector2f(m_player_config.S,m_player_config.S), 0.0);
     /* shape -> player shape */
-    new_e->p_CShape     = std::make_shared<component::CShape>(m_player_config.SR, m_player_config.V, std::vector<uint8_t> {m_player_config.FR,m_player_config.FG,m_player_config.FB}, std::vector<uint8_t> {m_player_config.OR,m_player_config.OG,m_player_config.OB}, m_player_config.OT);
+    new_e->p_CShape     = std::make_shared<component::CShape>(m_player_config.SR, m_player_config.V, std::vector<uint8_t> {(uint8_t)m_player_config.FR,(uint8_t)m_player_config.FG,(uint8_t)m_player_config.FB}, std::vector<uint8_t> {(uint8_t)m_player_config.OR,(uint8_t)m_player_config.OG,(uint8_t)m_player_config.OB}, m_player_config.OT);
     /* input -> for user keyboard input */
     new_e->p_CInput     = std::make_shared<component::CInput>();
 
@@ -136,7 +143,7 @@ game::Game::run()
         /* we activate these systems only if the game is running */
         if (!m_pause_game)
         {
-            m_system_enemy_spawner.spaw_enemy((void*)this);
+            //m_system_enemy_spawner.spaw_enemy((void*)this);
             m_system_movement.movement((void*)this);
             m_system_collision.collision((void*)this);
         }
@@ -179,7 +186,7 @@ game::Game::spawnEnemy()
     /* transform -> position and velocity */
     new_e->p_CTransform = std::make_shared<component::CTransform>(enemy_pos, sf::Vector2f(enemy_vel,enemy_vel), 0.0);
     /* shape -> player shape */
-    new_e->p_CShape     = std::make_shared<component::CShape>(m_enemy_config.SR, enemy_shape_sides, std::vector<uint8_t> {m_enemy_config.OR,m_enemy_config.OG,m_enemy_config.OB}, std::vector<uint8_t> {m_enemy_config.OR,m_enemy_config.OG,m_enemy_config.OB}, m_enemy_config.OT);
+    new_e->p_CShape     = std::make_shared<component::CShape>(m_enemy_config.SR, enemy_shape_sides, std::vector<uint8_t> {(uint8_t)m_enemy_config.OR,(uint8_t)m_enemy_config.OG,(uint8_t)m_enemy_config.OB}, std::vector<uint8_t> {(uint8_t)m_enemy_config.OR,(uint8_t)m_enemy_config.OG,(uint8_t)m_enemy_config.OB}, m_enemy_config.OT);
     /* input -> for user keyboard input */
     new_e->p_CInput     = std::make_shared<component::CInput>();
     /* score -> enemy points value */
@@ -322,7 +329,7 @@ game::Game::spawnBullets(std::shared_ptr<entity::Entity> entity, const sf::Vecto
     /* transform -> position and velocity */
     new_e->p_CTransform = std::make_shared<component::CTransform>(entity->p_CShape->m_shape.getPosition(), calculate_velocity(mouse_pos, entity->p_CTransform->m_pos, this->m_bullet_config.S), 0.0); /* FIXME, hardcoded angle */
     /* shape -> player shape */
-    new_e->p_CShape     = std::make_shared<component::CShape>(this->m_bullet_config.SR, this->m_bullet_config.V, std::vector<uint8_t> {this->m_bullet_config.FR, this->m_bullet_config.FG, this->m_bullet_config.FB}, std::vector<uint8_t> {this->m_bullet_config.OR, this->m_bullet_config.OG, this->m_bullet_config.OB}, this->m_bullet_config.OT);
+    new_e->p_CShape     = std::make_shared<component::CShape>(this->m_bullet_config.SR, this->m_bullet_config.V, std::vector<uint8_t> {(uint8_t)this->m_bullet_config.FR,(uint8_t)this->m_bullet_config.FG,(uint8_t)this->m_bullet_config.FB}, std::vector<uint8_t> {(uint8_t)this->m_bullet_config.OR,(uint8_t)this->m_bullet_config.OG,(uint8_t)this->m_bullet_config.OB}, this->m_bullet_config.OT);
     /* input -> for user keyboard input */
     new_e->p_CInput     = std::make_shared<component::CInput>();
     /* collision radious */

@@ -10,21 +10,21 @@ namespace game
     typedef struct
     {
         int SR, CR, OT, V;
-        uint8_t FR, FG, FB, OR, OG, OB;
+        int FR, FG, FB, OR, OG, OB;
         float S;
     } PLAYER_CONFIG;
 
     typedef struct
     {
         int SR, CR, OT, VMIN, VMAX, L, SI;
-        uint8_t OR, OG, OB;
+        int OR, OG, OB;
         float SMIN, SMAX;
     } ENEMY_CONFIG;
 
     typedef struct
     {
         int SR, CR, OT, V, L;
-        uint8_t FR, FG, FB, OR, OG, OB;
+        int FR, FG, FB, OR, OG, OB;
         float S;
     } BULLET_CONFIG;
 

@@ -2,7 +2,7 @@
 
 int main (int agrc, char *argv[])
 {
-    game::Game  new_game("input.txt");
+    game::Game  new_game("../config.txt");
     new_game.run();
 
     return 0;
