@@ -21,10 +21,10 @@ namespace component
     {
     public:
         sf::CircleShape     m_shape;
-        CShape(const float size, const std::vector<uint8_t> out_colour, const std::vector<uint8_t> inner_colour, const float thickness);
-        CShape(const float size, const int sides, const std::vector<uint8_t> out_colour, const std::vector<uint8_t> inner_colour, const float thickness);
-        CShape(const float size, const sf::Color out_color, const sf::Color inner_color, const float thickness);
-        CShape(const float size, const int sides, const sf::Color out_color, const sf::Color inner_color, const float thickness);
+        CShape(const float size, const std::vector<uint8_t> inner_color, const std::vector<uint8_t> out_color, const float thickness);
+        CShape(const float size, const int sides, const std::vector<uint8_t> inner_color, const std::vector<uint8_t> out_color, const float thickness);
+        CShape(const float size, const sf::Color inner_color, const sf::Color out_color, const float thickness);
+        CShape(const float size, const int sides, const sf::Color inner_color, const sf::Color out_color, const float thickness);
     };
 
     class CCollision

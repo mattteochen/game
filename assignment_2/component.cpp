@@ -1,22 +1,22 @@
 #include "component.h"
 
-component::CShape::CShape(const float size, const std::vector<uint8_t> out_colour, const std::vector<uint8_t> inner_colour, const float thickness) : m_shape(size)
+component::CShape::CShape(const float size, const std::vector<uint8_t> inner_color, const std::vector<uint8_t> out_color, const float thickness) : m_shape(size)
 {
-    m_shape.setFillColor(sf::Color(inner_colour[0],inner_colour[1],inner_colour[2]));
+    m_shape.setFillColor(sf::Color(inner_color[0],inner_color[1],inner_color[2]));
     m_shape.setOutlineThickness(thickness);
-    m_shape.setOutlineColor(sf::Color(out_colour[0],out_colour[1],out_colour[2]));
+    m_shape.setOutlineColor(sf::Color(out_color[0],out_color[1],out_color[2]));
     m_shape.setOrigin(size,size);
 }
 
-component::CShape::CShape(const float size, const int sides, const std::vector<uint8_t> out_colour, const std::vector<uint8_t> inner_colour, const float thickness) : m_shape(size, sides)
+component::CShape::CShape(const float size, const int sides, const std::vector<uint8_t> inner_color, const std::vector<uint8_t> out_color, const float thickness) : m_shape(size, sides)
 {
-    m_shape.setFillColor(sf::Color(inner_colour[0],inner_colour[1],inner_colour[2]));
+    m_shape.setFillColor(sf::Color(inner_color[0],inner_color[1],inner_color[2]));
     m_shape.setOutlineThickness(thickness);
-    m_shape.setOutlineColor(sf::Color(out_colour[0],out_colour[1],out_colour[2]));
+    m_shape.setOutlineColor(sf::Color(out_color[0],out_color[1],out_color[2]));
     m_shape.setOrigin(size,size);
 }
 
-component::CShape::CShape(const float size, const sf::Color out_color, const sf::Color inner_color, const float thickness) : m_shape(size)
+component::CShape::CShape(const float size, const sf::Color inner_color, const sf::Color out_color, const float thickness) : m_shape(size)
 {
     m_shape.setFillColor(sf::Color(inner_color));
     m_shape.setOutlineThickness(thickness);
@@ -24,7 +24,7 @@ component::CShape::CShape(const float size, const sf::Color out_color, const sf:
     m_shape.setOrigin(size,size);
 }
 
-component::CShape::CShape(const float size, const int sides, const sf::Color out_color, const sf::Color inner_color, const float thickness) : m_shape(size, sides)
+component::CShape::CShape(const float size, const int sides, const sf::Color inner_color, const sf::Color out_color, const float thickness) : m_shape(size, sides)
 {
     m_shape.setFillColor(sf::Color(inner_color));
     m_shape.setOutlineThickness(thickness);
