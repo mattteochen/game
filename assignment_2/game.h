@@ -2,8 +2,8 @@
  * Game main definition
  * */
 
-#include "SFML/System/Vector2.hpp"
 #include "system.h"
+#include "entity.h"
 
 namespace game
 {
@@ -35,6 +35,13 @@ namespace game
 
     class Game
     {
+        friend class game_system::SMovement;
+        friend class game_system::SUserinput;
+        friend class game_system::SRender;
+        friend class game_system::SLifespan;
+        friend class game_system::SEnemyspawner;
+        friend class game_system::SCollision;
+
         sf::RenderWindow            m_window;
         int                         m_score = 0;
         int                         m_current_frame;
@@ -43,7 +50,7 @@ namespace game
         bool                        m_running_game = 1;
         
         /* game entities */
-        entity::Manager         m_entity_manager;
+        entity::Manager             m_entity_manager;
     
         /* game current player */
         std::shared_ptr<entity::Entity> m_player;
@@ -54,14 +61,14 @@ namespace game
         game_system::SLifespan       m_system_life_span;
         game_system::SRender         m_system_render;
         game_system::SEnemyspawner   m_system_enemy_spawner;
-        game_system::SCollision      m_system_collisio;
+        game_system::SCollision      m_system_collision;
 
         /* game private methods */
         void                        init(const std::string config);                                                     /* initialize game param from config file */
         void                        setPaused();                                                                        /* pause the game */
         void                        spawnPlayer();
         void                        spawnEnemy();
-        void                        spawnEnemy(std::shared_ptr<entity::Entity> old_enemy, sf::Vector2f &vec);
+        void                        spawnEnemy(std::shared_ptr<entity::Entity> &old_enemy, sf::Vector2f &vel);
         void                        spawnSmallEnemies(std::shared_ptr<entity::Entity> entity);
         void                        spawnBullets(std::shared_ptr<entity::Entity> entity, const sf::Vector2f mouse_pos);
         void                        spawnSpecialWeapon(std::shared_ptr<entity::Entity> entity);

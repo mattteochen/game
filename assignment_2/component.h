@@ -2,6 +2,7 @@
  * In component we declare all the components that can be shared with all the entities
  * */
 
+#include "SFML/Graphics/Color.hpp"
 #include "common.h"
 
 namespace component
@@ -22,6 +23,8 @@ namespace component
         sf::CircleShape     m_shape;
         CShape(const float size, const std::vector<uint8_t> out_colour, const std::vector<uint8_t> inner_colour, const float thickness);
         CShape(const float size, const int sides, const std::vector<uint8_t> out_colour, const std::vector<uint8_t> inner_colour, const float thickness);
+        CShape(const float size, const sf::Color out_color, const sf::Color inner_color, const float thickness);
+        CShape(const float size, const int sides, const sf::Color out_color, const sf::Color inner_color, const float thickness);
     };
 
     class CCollision
