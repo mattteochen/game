@@ -33,4 +33,7 @@
 /* RGB std::vector len */
 #define RGB_COLOUR_LEN  3
 
+/* alpha scaling */
+#define ALPHA_SCALING   100
+
 #endif
