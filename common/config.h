@@ -17,6 +17,8 @@
 #include "SFML/Window/Event.hpp"
 #include "SFML/Window/Keyboard.hpp"
 
+#define PRINT           std::cout
+
 /* window param */
 #define WINDOW_HEIGH    480
 #define WINDOW_LENGTH   640
