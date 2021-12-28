@@ -8,6 +8,7 @@ namespace entity
 {
     class Entity
     {
+        friend class Manager;
     private:
         const size_t        m_id = 0;
         const std::string   m_tag;
@@ -17,7 +18,6 @@ namespace entity
         Entity() {}
         Entity(const std::string tag, const size_t id) : m_id(id), m_tag(tag) {}
 
-        friend class Manager;
     public:
         std::shared_ptr<component::CTransform>      p_CTransform;
         std::shared_ptr<component::CShape>          p_CShape;

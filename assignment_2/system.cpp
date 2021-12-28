@@ -36,7 +36,8 @@ game_system::SMovement::movement(void *game)
     /* update the movement for all entities in the game after calculated the player new velocity */
     for (auto &e : this_game->m_entity_manager.getEntities())
     {
-        e->p_CTransform->m_pos += e->p_CTransform->m_vel;
+        e->p_CTransform->m_pos.x += e->p_CTransform->m_vel.x;
+        e->p_CTransform->m_pos.y += e->p_CTransform->m_vel.y;
     }
 }
 
@@ -88,19 +89,27 @@ game_system::SCollision::collision(void *game)
     {
         if (e->p_CTransform->m_vel.x > 0 && e->p_CTransform->m_vel.y < 0)
         {
-            e->p_CTransform->m_vel.x *= -1; 
+            e->p_CTransform->m_vel.x *= -1.0; 
         }
         else if (e->p_CTransform->m_vel.x < 0 && e->p_CTransform->m_vel.y < 0)
         {
-            e->p_CTransform->m_vel.y *= -1;
+            e->p_CTransform->m_vel.y *= -1.0;
         }
         else if (e->p_CTransform->m_vel.x < 0 && e->p_CTransform->m_vel.y > 0)
         {
-            e->p_CTransform->m_vel.x *= -1;
+            e->p_CTransform->m_vel.x *= -1.0;
         }
         else if (e->p_CTransform->m_vel.x > 0 && e->p_CTransform->m_vel.y > 0) 
         {
-            e->p_CTransform->m_vel.y *= -1;
+            e->p_CTransform->m_vel.y *= -1.0;
+        }
+        else if (e->p_CTransform->m_vel.x == 0 && (e->p_CTransform->m_vel.y > 0 || e->p_CTransform->m_vel.y < 0))
+        {
+            e->p_CTransform->m_vel.y *= -1.0;
+        }
+        else if (e->p_CTransform->m_vel.y == 0 && (e->p_CTransform->m_vel.x > 0 || e->p_CTransform->m_vel.x < 0))
+        {
+            e->p_CTransform->m_vel.x *= -1.0;
         }
         else
         {
@@ -182,6 +191,16 @@ game_system::SRender::render(void *game)
     /* sfml window draw */
     this_game->m_window.draw(this_game->m_player->p_CShape->m_shape);
     
+
+    /* display bullet */
+    for (auto &b : this_game->m_entity_manager.getEntitiesTag("bullet"))
+    {
+        b->p_CShape->m_shape.setPosition(b->p_CTransform->m_pos.x, b->p_CTransform->m_pos.y);
+        b->p_CTransform->m_angle += 1.0f;
+        b->p_CShape->m_shape.setRotation(b->p_CTransform->m_angle);
+        this_game->m_window.draw(b->p_CShape->m_shape);
+    }
+
     /* display */
     this_game->m_window.display();
 }
@@ -205,19 +224,19 @@ game_system::SUserinput::input(void *game)
             switch (event.key.code)
             {
             case sf::Keyboard::W:
-                std::cout << "pressed W\n";
+                //std::cout << "pressed W\n";
                 this_game->m_player->p_CInput->up = 1;
                 break;
             case sf::Keyboard::A:
-                std::cout << "pressed A\n";
+                //std::cout << "pressed A\n";
                 this_game->m_player->p_CInput->left = 1;
                 break;
             case sf::Keyboard::D:
-                std::cout << "pressed D\n";
+                //std::cout << "pressed D\n";
                 this_game->m_player->p_CInput->right = 1;
                 break;
             case sf::Keyboard::S:
-                std::cout << "pressed S\n";
+                //std::cout << "pressed S\n";
                 this_game->m_player->p_CInput->down = 1;
                 break;
             }
@@ -228,19 +247,19 @@ game_system::SUserinput::input(void *game)
             switch (event.key.code)
             {
             case sf::Keyboard::W:
-                std::cout << "released W\n";
+                //std::cout << "released W\n";
                 this_game->m_player->p_CInput->up = 0;
                 break;
             case sf::Keyboard::A:
-                std::cout << "released A\n";
+                //std::cout << "released A\n";
                 this_game->m_player->p_CInput->left = 0;
                 break;
             case sf::Keyboard::D:
-                std::cout << "released D\n";
+                //std::cout << "released D\n";
                 this_game->m_player->p_CInput->right = 0;
                 break;
             case sf::Keyboard::S:
-                std::cout << "released S\n";
+                //std::cout << "released S\n";
                 this_game->m_player->p_CInput->down = 0;
                 break;
             }
@@ -250,7 +269,7 @@ game_system::SUserinput::input(void *game)
         {
             if (event.mouseButton.button == sf::Mouse::Left)
             {
-                std::cout << "spawn bullet\n";
+                this_game->m_player->p_CInput->shoot = 1;
                 this_game->spawnBullets(this_game->m_player, sf::Vector2f(event.mouseButton.x,event.mouseButton.y));
             }
             
@@ -260,5 +279,20 @@ game_system::SUserinput::input(void *game)
                 /* TODO: special attack */
             }
         }
+
+        //if (event.type == sf::Event::MouseButtonReleased)
+        //{
+        //    if (event.mouseButton.button == sf::Mouse::Left)
+        //    {
+        //        std::cout << "end spawn bullet\n";
+        //        this_game->m_player->p_CInput->shoot = 0;
+        //    }
+        //    
+        //    if (event.mouseButton.button == sf::Mouse::Right)
+        //    {
+        //        std::cout << "end spawn special\n";
+        //        /* TODO: special attack */
+        //    }
+        //}
     }
 }
