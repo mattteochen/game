@@ -1,3 +1,5 @@
+#include "SFML/Graphics/Sprite.hpp"
+#include "SFML/Graphics/Texture.hpp"
 #include "SFML/System/Vector2.hpp"
 #include "SFML/Window/Event.hpp"
 #include "SFML/Window/Keyboard.hpp"
@@ -81,42 +83,15 @@ game_system::SCollision::collision(void *game)
 {
     game::Game *this_game = (game::Game*)game;
 
-    auto do_touch_walls = [&](const sf::Vector2f pos, const float radius)
+    auto do_touch_walls = [&](std::shared_ptr<entity::Entity> &e)
     {
-        return (pos.x <= 0 || pos.y <= 0 || pos.y >= (this_game->m_window_config.height-radius*2) || pos.x >= (this_game->m_window_config.width-radius*2));
-    };
-
-    auto recalculate_velocity = [&](std::shared_ptr<entity::Entity> &e)
-    {
-        if (e->p_CTransform->m_vel.x > 0 && e->p_CTransform->m_vel.y < 0)
-        {
-            e->p_CTransform->m_vel.x *= -1.0; 
-        }
-        else if (e->p_CTransform->m_vel.x < 0 && e->p_CTransform->m_vel.y < 0)
-        {
-            e->p_CTransform->m_vel.y *= -1.0;
-        }
-        else if (e->p_CTransform->m_vel.x < 0 && e->p_CTransform->m_vel.y > 0)
+        if (e->p_CTransform->m_pos.x < (0+e->p_CShape->m_shape.getRadius()) || this_game->m_window_config.width-e->p_CShape->m_shape.getRadius() < e->p_CTransform->m_pos.x)
         {
             e->p_CTransform->m_vel.x *= -1.0;
         }
-        else if (e->p_CTransform->m_vel.x > 0 && e->p_CTransform->m_vel.y > 0) 
+        if (e->p_CTransform->m_pos.y < (0+e->p_CShape->m_shape.getRadius()) || this_game->m_window_config.height-e->p_CShape->m_shape.getRadius() < e->p_CTransform->m_pos.y)
         {
             e->p_CTransform->m_vel.y *= -1.0;
-        }
-        else if (e->p_CTransform->m_vel.x == 0 && (e->p_CTransform->m_vel.y > 0 || e->p_CTransform->m_vel.y < 0))
-        {
-            e->p_CTransform->m_vel.y *= -1.0;
-        }
-        else if (e->p_CTransform->m_vel.y == 0 && (e->p_CTransform->m_vel.x > 0 || e->p_CTransform->m_vel.x < 0))
-        {
-            e->p_CTransform->m_vel.x *= -1.0;
-        }
-        else
-        {
-            std::cerr << e->p_CTransform->m_vel.x << "  " << e->p_CTransform->m_vel.y << std::endl;
-            std::cerr << "direction error\n";
-            exit(EXIT_FAILURE);
         }
     };
 
@@ -127,9 +102,24 @@ game_system::SCollision::collision(void *game)
         {
             if (do_collide(this_game->m_player->p_CTransform->m_pos, e->p_CTransform->m_pos, this_game->m_player->p_CCollision->radius + e->p_CCollision->radius))
             {
-                PRINT << "lose\n";
-                exit(EXIT_FAILURE);
-                /* TODO: respawn */
+                int score = this_game->get_max_score(this_game->m_score);
+                this_game->print_score(score);
+                this_game->m_running_game = 0;
+                return;
+            }
+        }
+    }
+    /* player - small enemy collision */
+    for (auto &p : this_game->m_entity_manager.getEntitiesTag("player"))
+    {
+        for (auto &e : this_game->m_entity_manager.getEntitiesTag("small_enemy"))
+        {
+            if (do_collide(this_game->m_player->p_CTransform->m_pos, e->p_CTransform->m_pos, this_game->m_player->p_CCollision->radius + e->p_CCollision->radius))
+            {
+                int score = this_game->get_max_score(this_game->m_score);
+                this_game->print_score(score);
+                this_game->m_running_game = 0;
+                return;
             }
         }
     }
@@ -143,6 +133,24 @@ game_system::SCollision::collision(void *game)
             {
                 b->destroy();
                 e->destroy();
+                this_game->spawnSmallEnemies(e);
+                /* update the score */
+                this_game->m_score += e->p_CScore->score;
+            }
+        }
+    }
+
+    /* bullet - small enemy collision */
+    for (auto &b : this_game->m_entity_manager.getEntitiesTag("bullet"))
+    {
+        for (auto &e : this_game->m_entity_manager.getEntitiesTag("small_enemy"))
+        {
+            if (do_collide(b->p_CTransform->m_pos, e->p_CTransform->m_pos, b->p_CCollision->radius + e->p_CCollision->radius))
+            {
+                b->destroy();
+                e->destroy();
+                /* update the score */
+                this_game->m_score += e->p_CScore->score;
             }
         }
     }
@@ -150,19 +158,34 @@ game_system::SCollision::collision(void *game)
     /* check the bounds */
     for (auto &b : this_game->m_entity_manager.getEntitiesTag("bullet"))
     {
-        if (do_touch_walls(b->p_CTransform->m_pos, b->p_CShape->m_shape.getRadius()))
-        {
-            recalculate_velocity(b);
-        }
+        do_touch_walls(b);
     }
     for (auto &e : this_game->m_entity_manager.getEntitiesTag("enemy"))
     {
-        if (do_touch_walls(e->p_CTransform->m_pos, e->p_CShape->m_shape.getRadius()))
-        {
-            recalculate_velocity(e);
-        }
+        do_touch_walls(e);
     }
-    /* TODO: update player position */
+    for (auto &e : this_game->m_entity_manager.getEntitiesTag("small_enemy"))
+    {
+        do_touch_walls(e);
+    }
+
+    /* check player over bounds */
+    if (this_game->m_player->p_CTransform->m_pos.x < (0+this_game->m_player->p_CShape->m_shape.getRadius()/2))
+    {
+        this_game->m_player->p_CTransform->m_pos.x = 0+this_game->m_player->p_CShape->m_shape.getRadius()/2;
+    }
+    if ((this_game->m_window_config.width-this_game->m_player->p_CShape->m_shape.getRadius()/2) < this_game->m_player->p_CTransform->m_pos.x)
+    {
+        this_game->m_player->p_CTransform->m_pos.x = this_game->m_window_config.width-this_game->m_player->p_CShape->m_shape.getRadius()/2;
+    }
+    if (this_game->m_player->p_CTransform->m_pos.y < (0+this_game->m_player->p_CShape->m_shape.getRadius()/2))
+    {
+        this_game->m_player->p_CTransform->m_pos.y = 0+this_game->m_player->p_CShape->m_shape.getRadius()/2;
+    }
+    if ((this_game->m_window_config.height-this_game->m_player->p_CShape->m_shape.getRadius()/2) < this_game->m_player->p_CTransform->m_pos.y)
+    {
+        this_game->m_player->p_CTransform->m_pos.y = this_game->m_window_config.height-this_game->m_player->p_CShape->m_shape.getRadius()/2;
+    }
 }
 
 void
@@ -184,7 +207,7 @@ game_system::SRender::render(void *game)
     /* always clear the window */
     this_game->m_window.clear();
 
-    /* TODO: add all the other entities */
+    this_game->m_window.draw(this_game->m_sprite);
     
     /* set position */
     this_game->m_player->p_CShape->m_shape.setPosition(this_game->m_player->p_CTransform->m_pos.x, this_game->m_player->p_CTransform->m_pos.y);
@@ -214,6 +237,26 @@ game_system::SRender::render(void *game)
             this_game->m_window.draw(e->p_CShape->m_shape);
         }
     }
+    /* display small enemy */
+    if (this_game->m_entity_manager.getEntitiesTag("small_enemy").size() > 0)
+    {
+        for (auto &e : this_game->m_entity_manager.getEntitiesTag("small_enemy"))
+        {
+            e->p_CShape->m_shape.setPosition(e->p_CTransform->m_pos.x, e->p_CTransform->m_pos.y);
+            e->p_CTransform->m_angle += 1.0f;
+            e->p_CShape->m_shape.setRotation(e->p_CTransform->m_angle);
+            this_game->m_window.draw(e->p_CShape->m_shape);
+        }
+    }
+    
+    /* score */
+    std::string score_str = "SCORE: ";
+    score_str += std::to_string(this_game->m_score);
+    this_game->m_text.setString(score_str);
+    this_game->m_text.setCharacterSize(40);
+    this_game->m_text.setFont(this_game->m_font);
+    this_game->m_text.setPosition(0.0,0.0);
+    this_game->m_window.draw(this_game->m_text);
 
     /* display */
     this_game->m_window.display();

@@ -1,7 +1,10 @@
 #include "game.h"
+#include "SFML/Graphics/Rect.hpp"
 #include "SFML/System/Vector2.hpp"
+#include "SFML/Window/Keyboard.hpp"
 #include <_types/_uint8_t.h>
 #include <cstdlib>
+#include <fstream>
 #include <memory>
 #include <stddef.h>
 
@@ -108,6 +111,19 @@ game::Game::init(const std::string config)
     {
         //TODO
     }
+
+    /* load background */
+    if (!m_texture.loadFromFile("../bkg.jpg"))
+    {
+        std::cerr << "image error\n";
+        exit(EXIT_FAILURE);
+    }
+    /* calculate scale */
+    float scaleX = (float)m_window_config.width / m_texture.getSize().x;
+    float scaleY = (float)m_window_config.height / m_texture.getSize().y;
+    m_sprite.setTexture(m_texture);
+    m_sprite.setScale(scaleX, scaleY);
+
     spawnPlayer();
 }
 
@@ -132,7 +148,7 @@ game::Game::spawnPlayer()
 }
 
 /* main game loop */
-void
+int
 game::Game::run()
 {
     /* some systems must run even when the game is paused */
@@ -146,12 +162,15 @@ game::Game::run()
         m_system_user_input.input((void*)this);
         if (!m_pause_game) m_system_movement.movement((void*)this);
         if (!m_pause_game) m_system_collision.collision((void*)this);
+        /* after collision */
+        if (m_running_game == 0) return 1;
         m_system_render.render((void*)this);
         if (!m_pause_game) m_system_life_span.lifespan((void*)this);
 
         /* FIXME not sure this is the right position for this call */
         m_current_frame++;
     }
+    return 0;
 }
 
 void
@@ -167,23 +186,27 @@ game::Game::spawnEnemy()
     int width_max   = m_window_config.width;
     int height_max  = m_window_config.height;
 
-    auto generate_rand = [&](const int min, const int max)->float
+    auto is_in_player_area = [](const sf::Vector2f spawn_pos, const sf::Vector2f player_pos, const float radius)
     {
-        float ret = 0;
-        ret = rand() % (max + 1);
-        return ret;
+        if (squared_euclidean_distance(spawn_pos, player_pos) <= pow(radius,2)) return 1;
+        return 0;
     };
     
-    sf::Vector2f enemy_pos(generate_rand(0,width_max - m_enemy_config.SR), generate_rand(0,height_max - m_enemy_config.SR));
+    sf::Vector2f enemy_pos;
+    do
+    {
+        sf::Vector2f tmp_vec(generate_rand(0,width_max - m_enemy_config.SR), generate_rand(0,height_max - m_enemy_config.SR));
+        enemy_pos = tmp_vec;
+    } while (is_in_player_area(enemy_pos, m_player->p_CTransform->m_pos, m_player->p_CShape->m_shape.getRadius()));
+
     float enemy_vel = generate_rand(m_enemy_config.SMIN, m_enemy_config.SMAX);
     int enemy_shape_sides = generate_rand(m_enemy_config.VMIN, m_enemy_config.VMAX);
     std::vector<uint8_t> enemy_color(3,0);
     enemy_color[0] = generate_rand(0, 255);
     enemy_color[1] = generate_rand(0, 255);
     enemy_color[2] = generate_rand(0, 255);
-
     
-        /* call the entity manager to create a new entity */
+    /* call the entity manager to create a new entity */
     auto new_e = m_entity_manager.addEntity("enemy");
 
     /* now we wanna add component to that entity */
@@ -211,17 +234,12 @@ game::Game::spawnEnemy(std::shared_ptr<entity::Entity> &old_enemy, sf::Vector2f 
     new_e->p_CTransform = std::make_shared<component::CTransform>(old_enemy->p_CTransform->m_pos, vel, 0.0); /* FIXME, hardcoded angle */
     /* shape -> player shape */
     new_e->p_CShape     = std::make_shared<component::CShape>(old_enemy->p_CShape->m_shape.getRadius() / 2, old_enemy->p_CShape->m_shape.getPointCount(), old_enemy->p_CShape->m_shape.getFillColor(), old_enemy->p_CShape->m_shape.getOutlineColor(), old_enemy->p_CShape->m_shape.getOutlineThickness());
-    /* input -> for user keyboard input */
-    new_e->p_CInput     = std::make_shared<component::CInput>();
     /* score -> enemy points value */
     new_e->p_CScore     = std::make_shared<component::CScore>(old_enemy->p_CScore->score * 2); 
     /* collision radious */
     new_e->p_CCollision = std::make_shared<component::CCollision>(old_enemy->p_CCollision->radius / 2);
     /* lifespan -> small enemy life span */
     new_e->p_CLifespan = std::make_shared<component::CLifespan>(this->m_enemy_config.L, this->m_enemy_config.L);
-
-    /* update the last enemy spawn time */
-    //m_last_enemy_spawn_time = m_current_frame;
 };
 
 void                
@@ -240,7 +258,7 @@ game::Game::spawnSmallEnemies(std::shared_ptr<entity::Entity> entity)
             case 3:
                 spawn_angles.erase(spawn_angles.begin() + 1, spawn_angles.begin() + spawn_angles.size());
                 spawn_angles.push_back(sf::Vector2f(-0.5,sqrt(3)/2));
-                spawn_angles.push_back(sf::Vector2f(-0.5,sqrt(3)/2));
+                spawn_angles.push_back(sf::Vector2f(-0.5,-sqrt(3)/2));
                 break;
 
             case 4:
@@ -262,8 +280,8 @@ game::Game::spawnSmallEnemies(std::shared_ptr<entity::Entity> entity)
                 break;
 
             default:
-                std::cerr << "shape not supported\n";
-                exit(EXIT_FAILURE);
+                /* this number do not spawn */
+                return;
                 break;
         }
     };
@@ -343,3 +361,74 @@ game::Game::spawnSpecialWeapon(std::shared_ptr<entity::Entity> entity)
 
 }
 
+int
+game::Game::get_max_score(const int score)
+{
+    std::ifstream file("../score.txt");
+    int old_score = 0;
+    file >> old_score;
+
+    if (old_score >= score)
+    {
+        file.close();
+        return old_score;
+    }
+    else
+    {
+        file.close();
+        std::ofstream file_o("../score.txt", std::ofstream::trunc);
+        file_o << score;
+        file_o.close();
+        return score;
+    }
+}
+
+void
+game::Game::print_score(const int score)
+{
+    /* set the game over background */
+    if (!m_texture.loadFromFile("../gover.jpg"))
+    {
+        std::cerr << "image error\n";
+        exit(EXIT_FAILURE);
+    }
+    /* calculate scale */
+    float scaleX = (float)m_window_config.width / m_texture.getSize().x;
+    float scaleY = (float)m_window_config.height / m_texture.getSize().y;
+    m_sprite.setTexture(m_texture);
+    m_sprite.setScale(scaleX, scaleY);
+
+    std::string score_str = "GAME OVER LOSER!\nSCORE: ";
+    score_str += std::to_string(m_score) + "  ";
+    score_str += "BEST SCORE: ";
+    score_str += std::to_string(score);
+    score_str += "\nR to respawn / E to exit";
+    m_text.setString(score_str);
+    m_text.setCharacterSize(100);
+    m_text.setFont(m_font);
+    sf::FloatRect text_size = m_text.getLocalBounds();
+    m_text.setFillColor(sf::Color(0,204,0));
+    m_text.setPosition((float)m_window_config.width/2 - text_size.width / 2, (float)m_window_config.height / 2 - text_size.height / 2);
+
+    while(m_window.isOpen())
+    {
+        m_window.clear();
+        /* The event handler is essential ! */
+        sf::Event event;
+        while (m_window.pollEvent(event))
+        {
+            if (event.type == sf::Event::Closed) m_window.close();
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R)
+            {
+                return;
+            }
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::E)
+            {
+                exit(EXIT_SUCCESS);
+            }
+        }
+        m_window.draw(m_sprite);
+        m_window.draw(m_text);
+        m_window.display();
+    }
+}

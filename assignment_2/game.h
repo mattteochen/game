@@ -2,6 +2,7 @@
  * Game main definition
  * */
 
+#include "SFML/Graphics/Text.hpp"
 #include "system.h"
 #include "entity.h"
 
@@ -33,6 +34,22 @@ namespace game
         int width, height, frame_rate, full_screen;
     } WINDOW_CONFIG;
 
+    /* common lambdas */
+    auto squared_euclidean_distance = [](const sf::Vector2f a, const sf::Vector2f b)
+    {
+        float ret = 0.0;
+        float x = abs(a.x - b.x);
+        float y = abs(a.y - b.y);
+        return ret = (pow(x,2) + pow(y,2));
+    };
+
+    auto generate_rand = [](const int min_v, const int max_v)->float
+    {
+        float ret = 0;
+        ret = rand() % (max_v-min_v+1) + min_v;
+        return ret;
+    };
+
     class Game
     {
         friend class game_system::SMovement;
@@ -43,12 +60,14 @@ namespace game
         friend class game_system::SCollision;
 
         sf::RenderWindow            m_window;
+        sf::Texture                 m_texture;
+        sf::Sprite                  m_sprite;
         int                         m_score = 0;
         int                         m_current_frame;
         int                         m_last_enemy_spawn_time = 0; /* to spawn enemy at a certain rate */
         bool                        m_pause_game = 0;
         bool                        m_running_game = 1;
-        
+                
         /* game entities */
         entity::Manager             m_entity_manager;
     
@@ -82,7 +101,9 @@ namespace game
         WINDOW_CONFIG               m_window_config;
 
         Game(const std::string config);
-        void                run();
+        int                 run();
+        int                 get_max_score(const int score);
+        void                print_score(const int score);
     };
 
 }
