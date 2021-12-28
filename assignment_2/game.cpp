@@ -124,6 +124,8 @@ game::Game::spawnPlayer()
     new_e->p_CShape     = std::make_shared<component::CShape>(m_player_config.SR, m_player_config.V, std::vector<uint8_t> {(uint8_t)m_player_config.FR,(uint8_t)m_player_config.FG,(uint8_t)m_player_config.FB}, std::vector<uint8_t> {(uint8_t)m_player_config.OR,(uint8_t)m_player_config.OG,(uint8_t)m_player_config.OB}, m_player_config.OT);
     /* input -> for user keyboard input */
     new_e->p_CInput     = std::make_shared<component::CInput>();
+    /* collision */
+    new_e->p_CCollision = std::make_shared<component::CCollision>(m_player_config.CR);
 
     /* assign the player pointer */
     m_player = new_e;
@@ -140,7 +142,7 @@ game::Game::run()
         m_entity_manager.update();
         
         /* we activate these systems only if the game is running */
-        //m_system_enemy_spawner.spaw_enemy((void*)this);
+        m_system_enemy_spawner.spaw_enemy((void*)this);
         m_system_user_input.input((void*)this);
         if (!m_pause_game) m_system_movement.movement((void*)this);
         if (!m_pause_game) m_system_collision.collision((void*)this);
@@ -175,17 +177,20 @@ game::Game::spawnEnemy()
     sf::Vector2f enemy_pos(generate_rand(0,width_max - m_enemy_config.SR), generate_rand(0,height_max - m_enemy_config.SR));
     float enemy_vel = generate_rand(m_enemy_config.SMIN, m_enemy_config.SMAX);
     int enemy_shape_sides = generate_rand(m_enemy_config.VMIN, m_enemy_config.VMAX);
+    std::vector<uint8_t> enemy_color(3,0);
+    enemy_color[0] = generate_rand(0, 255);
+    enemy_color[1] = generate_rand(0, 255);
+    enemy_color[2] = generate_rand(0, 255);
 
-    /* call the entity manager to create a new entity */
+    
+        /* call the entity manager to create a new entity */
     auto new_e = m_entity_manager.addEntity("enemy");
 
     /* now we wanna add component to that entity */
     /* transform -> position and velocity */
     new_e->p_CTransform = std::make_shared<component::CTransform>(enemy_pos, sf::Vector2f(enemy_vel,enemy_vel), 0.0);
     /* shape -> player shape */
-    new_e->p_CShape     = std::make_shared<component::CShape>(m_enemy_config.SR, enemy_shape_sides, std::vector<uint8_t> {(uint8_t)m_enemy_config.OR,(uint8_t)m_enemy_config.OG,(uint8_t)m_enemy_config.OB}, std::vector<uint8_t> {(uint8_t)m_enemy_config.OR,(uint8_t)m_enemy_config.OG,(uint8_t)m_enemy_config.OB}, m_enemy_config.OT);
-    /* input -> for user keyboard input */
-    new_e->p_CInput     = std::make_shared<component::CInput>();
+    new_e->p_CShape     = std::make_shared<component::CShape>(m_enemy_config.SR, enemy_shape_sides, enemy_color, enemy_color, m_enemy_config.OT);
     /* score -> enemy points value */
     new_e->p_CScore     = std::make_shared<component::CScore>(100); /* FIXME, hardcoded points value */
     /* collision radious */

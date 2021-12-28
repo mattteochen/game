@@ -70,24 +70,23 @@ entity::Manager::update()
     }
     m_to_add.clear();
 
-
     /* remove the death entities */
     for (auto it = m_entities.begin(); it != m_entities.end();)
     {
-        if (!(*it)->isAlive()) 
+        if (!(*it)->isAlive())
         {
-            if (!(*it)->isAlive())
-            {
-                /* store data to erase for map erasing */
-                std::string tag = (*it)->getTag();
-                size_t id = (*it)->getId();
-                /* erase form vector */
-                it = m_entities.erase(it);
-                /* erase from map */
-                erase_from_map(tag, id);
-            }
+            /* store data to erase for map erasing */
+            std::string tag = (*it)->getTag();
+            size_t id = (*it)->getId();
+            /* erase form vector */
+            it = m_entities.erase(it);
+            /* erase from map */
+            erase_from_map(tag, id);
         }
-        else it++;
-    }        
+        else
+        {
+            it++;
+        }
+    }
 }
 

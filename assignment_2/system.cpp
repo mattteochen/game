@@ -3,8 +3,18 @@
 #include "SFML/Window/Keyboard.hpp"
 #include "SFML/Window/Mouse.hpp"
 #include "game.h"
+#include <cstdio>
+#include <cstdlib>
 #include <memory>
 /* system.h is included in game.h */
+
+bool do_collide(const sf::Vector2f pos_player, const sf::Vector2f pos_enemy, const float collision_radius_sum)
+{
+    float x = abs(pos_enemy.x - pos_player.x);
+    float y = abs(pos_enemy.y - pos_player.y);
+    float powered_hy = pow(x,2) + pow(y,2);
+    return (powered_hy <= pow(collision_radius_sum,2));
+}
 
 void
 game_system::SMovement::movement(void *game)
@@ -71,15 +81,6 @@ game_system::SCollision::collision(void *game)
 {
     game::Game *this_game = (game::Game*)game;
 
-    auto do_collide = [](const sf::Vector2f pos_player, const sf::Vector2f pos_enemy, const float collision_radius_sum)->bool
-    {
-        float x = abs(pos_enemy.x - pos_player.x);
-        float y = abs(pos_enemy.y - pos_player.y);
-        float powered_hy = pow(x,2) + pow(y,2);
-
-        return (powered_hy <= pow(collision_radius_sum,2));
-    };
-
     auto do_touch_walls = [&](const sf::Vector2f pos, const float radius)
     {
         return (pos.x <= 0 || pos.y <= 0 || pos.y >= (this_game->m_window_config.height-radius*2) || pos.x >= (this_game->m_window_config.width-radius*2));
@@ -124,13 +125,15 @@ game_system::SCollision::collision(void *game)
     {
         for (auto &e : this_game->m_entity_manager.getEntitiesTag("enemy"))
         {
-            if (do_collide(p->p_CTransform->m_pos, e->p_CTransform->m_pos, p->p_CCollision->radius + e->p_CCollision->radius))
+            if (do_collide(this_game->m_player->p_CTransform->m_pos, e->p_CTransform->m_pos, this_game->m_player->p_CCollision->radius + e->p_CCollision->radius))
             {
-                e->destroy();
-                this_game->spawnPlayer();
+                PRINT << "lose\n";
+                exit(EXIT_FAILURE);
+                /* TODO: respawn */
             }
         }
     }
+
     /* bullet - enemy collision */
     for (auto &b : this_game->m_entity_manager.getEntitiesTag("bullet"))
     {
@@ -138,6 +141,7 @@ game_system::SCollision::collision(void *game)
         {
             if (do_collide(b->p_CTransform->m_pos, e->p_CTransform->m_pos, b->p_CCollision->radius + e->p_CCollision->radius))
             {
+                b->destroy();
                 e->destroy();
             }
         }
@@ -190,7 +194,6 @@ game_system::SRender::render(void *game)
 
     /* sfml window draw */
     this_game->m_window.draw(this_game->m_player->p_CShape->m_shape);
-    
 
     /* display bullet */
     for (auto &b : this_game->m_entity_manager.getEntitiesTag("bullet"))
@@ -199,6 +202,17 @@ game_system::SRender::render(void *game)
         b->p_CTransform->m_angle += 1.0f;
         b->p_CShape->m_shape.setRotation(b->p_CTransform->m_angle);
         this_game->m_window.draw(b->p_CShape->m_shape);
+    }
+    /* display enemy */
+    if (this_game->m_entity_manager.getEntitiesTag("enemy").size() > 0)
+    {
+        for (auto &e : this_game->m_entity_manager.getEntitiesTag("enemy"))
+        {
+            e->p_CShape->m_shape.setPosition(e->p_CTransform->m_pos.x, e->p_CTransform->m_pos.y);
+            e->p_CTransform->m_angle += 1.0f;
+            e->p_CShape->m_shape.setRotation(e->p_CTransform->m_angle);
+            this_game->m_window.draw(e->p_CShape->m_shape);
+        }
     }
 
     /* display */
