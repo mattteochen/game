@@ -6,6 +6,7 @@
 #include <fstream>
 #include <algorithm>
 #include <utility>
+#include <memory>
 #include <map>
 #include <queue>
 #include <iostream>
