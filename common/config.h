@@ -13,6 +13,8 @@
 #include <time.h>
 #include <math.h>
 #include "../SFML-2.5.1-macos-clang/include/SFML/Graphics.hpp"
+#include "../SFML-2.5.1-macos-clang/include/SFML/Audio.hpp"
+#include "../SFML-2.5.1-macos-clang/include/SFML/Window.hpp"
 #include "SFML/Graphics/CircleShape.hpp"
 #include "SFML/Graphics/Font.hpp"
 #include "SFML/System/Vector2.hpp"
