@@ -1,4 +1,5 @@
 #include "game.h"
+#include "SFML/Graphics/Color.hpp"
 #include "SFML/Graphics/Rect.hpp"
 #include "SFML/System/Vector2.hpp"
 #include "SFML/Window/Keyboard.hpp"
@@ -356,9 +357,37 @@ game::Game::spawnBullets(std::shared_ptr<entity::Entity> entity, const sf::Vecto
 
 /* TODO */
 void                        
-game::Game::spawnSpecialWeapon(std::shared_ptr<entity::Entity> entity)
+game::Game::spawnSpecialWeapon()
 {
+    std::vector<sf::Vector2f> positions;
+    std::vector<sf::Vector2f> velocity;
+    for (uint8_t i = 0; i < SPECIAL_WEAPON_SPAWN_NUM; i++)
+    {
+        positions.push_back(sf::Vector2f((float)m_window_config.width/10*(i),m_bullet_config.SR + 1));
+        if (i < SPECIAL_WEAPON_SPAWN_NUM/2)
+        {
+            velocity.push_back(sf::Vector2f(SPECIAL_VEL,SPECIAL_VEL));
+        }
+        else
+        {
+            velocity.push_back(sf::Vector2f(-SPECIAL_VEL,SPECIAL_VEL));
+        }
+    }
 
+    /* generate a rain of balls */
+    for (uint8_t i = 0; i < SPECIAL_WEAPON_SPAWN_NUM; i++)
+    {
+        /* call the entity manager to create a new entity */
+        auto new_e = m_entity_manager.addEntity("special");
+
+        /* now we wanna add component to that entity */
+        /* transform -> position and velocity */
+        new_e->p_CTransform = std::make_shared<component::CTransform>(positions[i], velocity[i], 0.0); /* FIXME, hardcoded angle */
+        /* shape -> player shape */
+        new_e->p_CShape     = std::make_shared<component::CShape>(this->m_bullet_config.SR, sf::Color::Green, sf::Color::Green, 0);
+        /* collision radious */
+        new_e->p_CCollision = std::make_shared<component::CCollision>(this->m_bullet_config.CR);
+    }
 }
 
 int

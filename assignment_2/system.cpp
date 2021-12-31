@@ -5,10 +5,14 @@
 #include "SFML/Window/Keyboard.hpp"
 #include "SFML/Window/Mouse.hpp"
 #include "game.h"
+#include <_types/_uint8_t.h>
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
 /* system.h is included in game.h */
+
+#define DESTROY     1
+#define NOT_DESTROY 0
 
 bool do_collide(const sf::Vector2f pos_player, const sf::Vector2f pos_enemy, const float collision_radius_sum)
 {
@@ -83,14 +87,24 @@ game_system::SCollision::collision(void *game)
 {
     game::Game *this_game = (game::Game*)game;
 
-    auto do_touch_walls = [&](std::shared_ptr<entity::Entity> &e)
+    auto do_touch_walls = [&](std::shared_ptr<entity::Entity> &e, uint8_t code)
     {
         if (e->p_CTransform->m_pos.x < (0+e->p_CShape->m_shape.getRadius()) || this_game->m_window_config.width-e->p_CShape->m_shape.getRadius() < e->p_CTransform->m_pos.x)
         {
+            if (code == DESTROY)
+            {
+                e->destroy();
+                return;
+            }
             e->p_CTransform->m_vel.x *= -1.0;
         }
         if (e->p_CTransform->m_pos.y < (0+e->p_CShape->m_shape.getRadius()) || this_game->m_window_config.height-e->p_CShape->m_shape.getRadius() < e->p_CTransform->m_pos.y)
         {
+            if (code == DESTROY)
+            {
+                e->destroy();
+                return;
+            }
             e->p_CTransform->m_vel.y *= -1.0;
         }
     };
@@ -136,6 +150,12 @@ game_system::SCollision::collision(void *game)
                 this_game->spawnSmallEnemies(e);
                 /* update the score */
                 this_game->m_score += e->p_CScore->score;
+                int new_divider = this_game->m_score/SPEACIAL_WEAPON_SCORE;
+                if (new_divider > 0 && new_divider > this_game->m_previous_special_weapon_divider)
+                {
+                    this_game->m_special_weapon_num++;
+                    this_game->m_previous_special_weapon_divider = new_divider;
+                }
             }
         }
     }
@@ -155,18 +175,49 @@ game_system::SCollision::collision(void *game)
         }
     }
 
+    /* special bullet enemy collision */
+    for (auto &b : this_game->m_entity_manager.getEntitiesTag("special"))
+    {
+        for (auto &e : this_game->m_entity_manager.getEntitiesTag("enemy"))
+        {
+            if (do_collide(b->p_CTransform->m_pos, e->p_CTransform->m_pos, b->p_CCollision->radius + e->p_CCollision->radius))
+            {
+                b->destroy();
+                e->destroy();
+                this_game->spawnSmallEnemies(e);
+                /* update the score */
+                this_game->m_score += e->p_CScore->score;
+            }
+        }
+        for (auto &e : this_game->m_entity_manager.getEntitiesTag("small_enemy"))
+        {
+            if (do_collide(b->p_CTransform->m_pos, e->p_CTransform->m_pos, b->p_CCollision->radius + e->p_CCollision->radius))
+            {
+                b->destroy();
+                e->destroy();
+                /* update the score */
+                this_game->m_score += e->p_CScore->score;
+            }
+        }
+    }
+
+
     /* check the bounds */
+    for (auto &b : this_game->m_entity_manager.getEntitiesTag("special"))
+    {
+        do_touch_walls(b, DESTROY);
+    }
     for (auto &b : this_game->m_entity_manager.getEntitiesTag("bullet"))
     {
-        do_touch_walls(b);
+        do_touch_walls(b, NOT_DESTROY);
     }
     for (auto &e : this_game->m_entity_manager.getEntitiesTag("enemy"))
     {
-        do_touch_walls(e);
+        do_touch_walls(e, NOT_DESTROY);
     }
     for (auto &e : this_game->m_entity_manager.getEntitiesTag("small_enemy"))
     {
-        do_touch_walls(e);
+        do_touch_walls(e, NOT_DESTROY);
     }
 
     /* check player over bounds */
@@ -226,6 +277,14 @@ game_system::SRender::render(void *game)
         b->p_CShape->m_shape.setRotation(b->p_CTransform->m_angle);
         this_game->m_window.draw(b->p_CShape->m_shape);
     }
+    /* display special bullet */
+    for (auto &b : this_game->m_entity_manager.getEntitiesTag("special"))
+    {
+        b->p_CShape->m_shape.setPosition(b->p_CTransform->m_pos.x, b->p_CTransform->m_pos.y);
+        b->p_CTransform->m_angle += 1.0f;
+        b->p_CShape->m_shape.setRotation(b->p_CTransform->m_angle);
+        this_game->m_window.draw(b->p_CShape->m_shape);
+    }
     /* display enemy */
     if (this_game->m_entity_manager.getEntitiesTag("enemy").size() > 0)
     {
@@ -249,9 +308,11 @@ game_system::SRender::render(void *game)
         }
     }
     
-    /* score */
+    /* score and special weapons */
     std::string score_str = "SCORE: ";
     score_str += std::to_string(this_game->m_score);
+    score_str += "  SPECIAL: ";
+    score_str += std::to_string(this_game->m_special_weapon_num);
     this_game->m_text.setString(score_str);
     this_game->m_text.setCharacterSize(40);
     this_game->m_text.setFont(this_game->m_font);
@@ -332,24 +393,12 @@ game_system::SUserinput::input(void *game)
             
             if (event.mouseButton.button == sf::Mouse::Right)
             {
-                std::cout << "spawn special\n";
-                /* TODO: special attack */
+                if (this_game->m_special_weapon_num > 0)
+                {
+                    this_game->m_special_weapon_num--;
+                    this_game->spawnSpecialWeapon();
+                }
             }
         }
-
-        //if (event.type == sf::Event::MouseButtonReleased)
-        //{
-        //    if (event.mouseButton.button == sf::Mouse::Left)
-        //    {
-        //        std::cout << "end spawn bullet\n";
-        //        this_game->m_player->p_CInput->shoot = 0;
-        //    }
-        //    
-        //    if (event.mouseButton.button == sf::Mouse::Right)
-        //    {
-        //        std::cout << "end spawn special\n";
-        //        /* TODO: special attack */
-        //    }
-        //}
     }
 }

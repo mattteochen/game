@@ -2,9 +2,12 @@
  * Game main definition
  * */
 
-#include "SFML/Graphics/Text.hpp"
 #include "system.h"
 #include "entity.h"
+
+#define SPECIAL_WEAPON_SPAWN_NUM    10
+#define SPECIAL_VEL                 20
+#define SPEACIAL_WEAPON_SCORE       5000
 
 namespace game
 {
@@ -64,6 +67,8 @@ namespace game
         sf::Sprite                  m_sprite;
         int                         m_score = 0;
         int                         m_current_frame;
+        int                         m_special_weapon_num = 0;
+        int                         m_previous_special_weapon_divider = 0;
         int                         m_last_enemy_spawn_time = 0; /* to spawn enemy at a certain rate */
         bool                        m_pause_game = 0;
         bool                        m_running_game = 1;
@@ -90,7 +95,7 @@ namespace game
         void                        spawnEnemy(std::shared_ptr<entity::Entity> &old_enemy, sf::Vector2f &vel);
         void                        spawnSmallEnemies(std::shared_ptr<entity::Entity> entity);
         void                        spawnBullets(std::shared_ptr<entity::Entity> entity, const sf::Vector2f mouse_pos);
-        void                        spawnSpecialWeapon(std::shared_ptr<entity::Entity> entity);
+        void                        spawnSpecialWeapon();
 
     public:
         sf::Text                    m_text;

@@ -2,7 +2,6 @@
  * In component we declare all the components that can be shared with all the entities
  * */
 
-#include "SFML/Graphics/Color.hpp"
 #include "common.h"
 
 namespace component
