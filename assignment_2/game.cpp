@@ -1,8 +1,4 @@
 #include "game.h"
-#include "SFML/Graphics/Color.hpp"
-#include "SFML/Graphics/Rect.hpp"
-#include "SFML/System/Vector2.hpp"
-#include "SFML/Window/Keyboard.hpp"
 #include <_types/_uint8_t.h>
 #include <cstdlib>
 #include <fstream>
@@ -361,7 +357,7 @@ game::Game::spawnSpecialWeapon()
 {
     std::vector<sf::Vector2f> positions;
     std::vector<sf::Vector2f> velocity;
-    for (uint8_t i = 0; i < SPECIAL_WEAPON_SPAWN_NUM; i++)
+    for (uint8_t i = 0; i <= SPECIAL_WEAPON_SPAWN_NUM; i++)
     {
         positions.push_back(sf::Vector2f((float)m_window_config.width/10*(i),m_bullet_config.SR + 1));
         if (i < SPECIAL_WEAPON_SPAWN_NUM/2)
@@ -375,7 +371,7 @@ game::Game::spawnSpecialWeapon()
     }
 
     /* generate a rain of balls */
-    for (uint8_t i = 0; i < SPECIAL_WEAPON_SPAWN_NUM; i++)
+    for (uint8_t i = 0; i <= SPECIAL_WEAPON_SPAWN_NUM; i++)
     {
         /* call the entity manager to create a new entity */
         auto new_e = m_entity_manager.addEntity("special");
