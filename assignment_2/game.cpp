@@ -110,7 +110,7 @@ game::Game::init(const std::string config)
     }
 
     /* load background */
-    if (!m_texture.loadFromFile("../bkg.jpg"))
+    if (!m_texture.loadFromFile("./bkg.jpg"))
     {
         std::cerr << "image error\n";
         exit(EXIT_FAILURE);

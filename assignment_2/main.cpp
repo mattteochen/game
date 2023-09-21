@@ -5,7 +5,7 @@ int main (int agrc, char *argv[])
 {
     while(1)
     {
-        game::Game  new_game("../config.txt");
+        game::Game  new_game("./config.txt");
         int ret = new_game.run();
         if (!ret) exit(EXIT_SUCCESS);
     }

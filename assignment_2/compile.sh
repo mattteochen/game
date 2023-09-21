@@ -1,4 +1,4 @@
 #!/bin/zsh
 
-clang++ -std=c++17 *.cpp ../common/*.cpp -o bin/v0_1 -I../SFML-2.5.1-macos-clang/include -L../SFML-2.5.1-macos-clang/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
+clang++ -std=c++17 *.cpp ../common/*.cpp -I/opt/homebrew/Cellar/sfml/2.6.0/include -L/opt/homebrew/Cellar/sfml/2.6.0/lib -lsfml-graphics -lsfml-window -lsfml-system -lsfml-audio
 
